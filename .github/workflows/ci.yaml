@@ -1,0 +1,61 @@
+name: Code Test, Coverage and Docs 
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup repo
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run:  |
+          docker build \
+            --build-arg USERNAME=$(whoami) \
+            --build-arg USER_UID=$(id -u) \
+            --build-arg USER_GID=$(id -g) \
+            -t deno-container \
+            -f .devcontainer/Dockerfile .
+
+      - name: Run tests and generate coverage
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspaces \
+            deno-container \
+            deno task test
+
+      - name: Generate documentation
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/workspaces \
+            deno-container \
+            deno task doc
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Prepare artifacts for upload
+        run: |
+          mkdir -p ./doc/coverage
+          mkdir -p ./doc/documentation
+          cp -r ./coverage/html/* ./doc/coverage/
+          cp -r ./documentation/* ./doc/documentation/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './doc'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
