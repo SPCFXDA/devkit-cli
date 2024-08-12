@@ -76,9 +76,9 @@ USER $USERNAME
 
 
 FROM devkit-deno AS devkit-build
+USER root
 COPY .. .
 RUN deno task release
-USER root
 RUN cp release/usr/local/bin/devkit /bin/devkit
 
 FROM ${BASE_IMAGE} AS devkit-release
