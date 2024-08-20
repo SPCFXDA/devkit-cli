@@ -1,6 +1,4 @@
-import yargs from 'yargs'
-// import { Arguments} from 'yargs_types'
-import { YargsInstance } from 'yarg_factory'
+import { Command } from 'cliffy/command'
 import Kia from 'kia'
 import { ClientTask } from './src/task/mod.ts'
 import { Balance, Faucet, Scan, Wallet } from './src/commands/mod.ts'
@@ -10,28 +8,26 @@ export class DevkitCLI {
 	private balance: Balance
 	private faucet: Faucet
 	private wallet: Wallet
-	private program: YargsInstance
+	private program: Command
 
 	constructor() {
-		const args = Deno.args.length ? Deno.args : ['help']
 		this.cfxNode = new ClientTask()
 		this.balance = new Balance()
 		this.faucet = new Faucet()
 		this.wallet = new Wallet()
-		this.program = yargs(args)
-			.scriptName('devkit-cli')
-			.usage('$0 <cmd> [args]')
-			.help()
-			.alias('help', 'h')
+
+		this.program = new Command()
+			.name('devkit-cli')
 			.version('0.2.0')
-			.alias('version', 'v')
+			.description('CLI tool for Conflux development tasks.')
+			.action(() => {
+				this.program.showHelp()
+			})
+
 		this.initializeCommands()
 	}
 
-	private async handleKia(
-		taskName: string,
-		task: () => Promise<void>,
-	): Promise<void> {
+	private async handleKia(taskName: string, task: () => Promise<void>): Promise<void> {
 		const kia = new Kia(`${taskName}...`)
 		kia.start()
 		try {
@@ -44,23 +40,13 @@ export class DevkitCLI {
 		}
 	}
 
-	private initializeCommands() {
-		this.program.command(
-			'start',
-			'Start the development node',
-			{
-				logs: {
-					type: 'boolean',
-					describe: 'Display logs after starting',
-					default: false,
-				},
-				scan: {
-					type: 'boolean',
-					describe: 'Scan the node for transactions after starting',
-					default: false,
-				},
-			},
-			async (argv: { logs: boolean; scan: boolean }) => {
+	private initializeCommands(): void {
+		this.program
+			.command('start')
+			.description('Start the development node')
+			.option('--logs [logs:boolean]', 'Display logs after starting', { default: false })
+			.option('--scan [scan:boolean]', 'Scan the node for transactions after starting', { default: false })
+			.action(async ({ logs, scan }) => {
 				await this.handleKia('Starting the node', async () => {
 					const boot = this.cfxNode.start()
 					if (boot.code) {
@@ -68,132 +54,138 @@ export class DevkitCLI {
 					}
 					await this.cfxNode.status()
 				})
-				if (argv.logs) {
+				if (logs) {
 					await this.cfxNode.logs()
-				} else if (argv.scan) {
+				} else if (scan) {
 					new Scan().run()
 				} else {
 					Deno.exit(0)
 				}
-			},
-		)
+			})
 
-		this.program.command(
-			'stop',
-			'Stop the development node',
-			{},
-			async () => {
-				// deno-lint-ignore require-await
+		this.program
+			.command('stop')
+			.description('Stop the development node')
+			.action(async () => {
 				await this.handleKia('Stopping the node', async () => {
 					this.cfxNode.stop()
 				})
-			},
-		)
+			})
 
-		this.program.command(
-			'scan',
-			'Scan the node for transactions',
-			{},
-			async () => {
+		this.program
+			.command('scan')
+			.description('Scan the node for transactions')
+			.action(async () => {
 				const scan = new Scan()
 				await this.handleKia('Scanner start', async () => {
 					await this.cfxNode.status()
 					scan.run()
 				})
-			},
-		)
+			})
 
-		this.program.command(
-			'status',
-			'Show the node status',
-			{},
-			async () => {
+		this.program
+			.command('status')
+			.description('Show the node status')
+			.action(async () => {
 				let status
 				await this.handleKia('Retrieving status', async () => {
 					status = await this.cfxNode.status()
 				})
 				console.log(status)
-			},
-		)
+			})
 
-		this.program.command(
-			'logs',
-			'Show node logs',
-			{},
-			async () => {
+		this.program
+			.command('logs')
+			.description('Show node logs')
+			.action(async () => {
 				await this.handleKia('Retrieving logs', async () => {
 					await this.cfxNode.logs()
 				})
-			},
-		)
+			})
 
-		this.program.command(
-			'errors',
-			'Show any errors the node produced',
-			{},
-			async () => {
+		this.program
+			.command('errors')
+			.description('Show any errors the node produced')
+			.action(async () => {
 				let errors
 				await this.handleKia('Retrieving errors', async () => {
 					errors = await this.cfxNode.stderr()
 				})
 				console.log(errors)
-			},
-		)
+			})
 
-		this.program.command(
-			'balance [address]',
-			"Show the balance of an address, if no address is specified show the genesis account's balance",
-			{
-				address: {
-					type: 'string',
-					describe: 'Wallet destination address',
-				},
-			},
-			async (argv: { address?: string }) => {
-				const address = argv.address || ''
-				await this.balance.run({ address })
-			},
-		)
+		this.program
+			.command('balance [address:string]')
+			.description('Show the balance of an address, or the genesis account if not specified')
+			.action(async (options, address?: string) => {
+				const addr = address || ''
+				await this.balance.run({ address: addr })
+			})
 
-		this.program.command(
-			'faucet [amount] [address]',
-			'Faucet utility to fund Core and ESpace wallets',
-			{
-				amount: {
-					type: 'number',
-					describe: 'Amount of CFX to send',
-				},
-				address: {
-					type: 'string',
-					describe: 'Wallet destination address',
-				},
-			},
-			async (argv: { amount?: number; address?: string }) => {
-				await this.faucet.run({ value: argv.amount, to: argv.address })
-			},
-		)
+		this.program
+			.command('faucet [amount:number] [address:string]')
+			.description('Faucet utility to fund Core and eSpace wallets')
+			.action(async (options, amount?: number, address?: string) => {
+				await this.faucet.run({ value: amount, to: address })
+			})
 
-		this.program.command(
-			'wallet',
-			'Configure a local HDWallet',
-			{},
-			async () => {
-				await this.handleKia('Configuring wallet', async () => {
-					await this.wallet.run()
-				})
-			},
-		)
+		const walletCommand = new Command()
+			.name('wallet')
+			.description('Configure a local HDWallet')
+			.action(() => {
+				walletCommand.showHelp()
+			})
 
-		this.program.command('*', '', () => {
-			console.log('Command not found, use -h for help')
-		})
+		const walletMnemonic = new Command()
+			.name('mnemonic')
+			.description('Manage mnemonic phrases')
+			.action(() => {
+				walletMnemonic.showHelp()
+			})
+
+		walletMnemonic
+			.command('print')
+			.description('Print the current mnemonic phrase')
+			.action(async () => {
+				await this.wallet.printMnemonic()
+			})
+
+		walletMnemonic
+			.command('configure')
+			.description('Configure the mnemonic phrase')
+			.action(async () => {
+				await this.wallet.configureMnemonic()
+			})
+
+		walletCommand.command('mnemonic', walletMnemonic)
+
+		walletCommand
+			.command('private-key')
+			.description('Manage private keys')
+			.option('--derivation-path [path:string]', 'Derivation path for the private key')
+			.option('--espace [espace:boolean]', 'Use the eSpace network', { default: true })
+			.option('--core [core:boolean]', 'Use the core network')
+			.option('--index [index:number]', 'Index for key derivation', { default: 0 })
+			.action(async ({ espace, core, index, derivationPath }) => {
+				if (core) {
+					await this.wallet.printCorePrivateKey(index as number)
+				} else if (espace) {
+					await this.wallet.printEspacePrivateKey(index as number)
+				} else if (derivationPath) {
+					await this.wallet.printPrivateKeyByDerivationPath(derivationPath as string)
+				} else {
+					console.log('Invalid options.')
+				}
+			})
+
+		this.program.command('wallet', walletCommand)
 	}
 
-	public parseArguments() {
-		this.program.parse()
+	public async parseArguments() {
+		await this.program.parse(Deno.args)
 	}
 }
 
 // Instantiate and parse arguments
 const devkitCLI = new DevkitCLI()
-devkitCLI.parseArguments()
+await devkitCLI.parseArguments()
