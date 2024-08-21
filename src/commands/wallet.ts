@@ -10,9 +10,8 @@ export class Wallet {
 
 	constructor() {
 		this.hdWallet = undefined
-		this.keystore = join(Deno.env.get("HOME") || "", ".devkit.keystore")
+		this.keystore = join(Deno.env.get('HOME') || '', '.devkit.keystore')
 		ensureFileSync(this.keystore)
-
 	}
 
 	// Read the keystore file
