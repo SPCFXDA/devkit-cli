@@ -2,6 +2,7 @@ import { Command } from 'cliffy/command'
 import Kia from 'kia'
 import { ClientTask } from './src/task/mod.ts'
 import { Balance, Faucet, Scan, Wallet } from './src/commands/mod.ts'
+import denojson from './deno.json' with { type: 'json' }
 
 export class DevkitCLI {
 	private cfxNode: ClientTask
@@ -18,7 +19,7 @@ export class DevkitCLI {
 
 		this.program = new Command()
 			.name('devkit-cli')
-			.version('0.2.0')
+			.version(denojson.version)
 			.description('CLI tool for Conflux development tasks.')
 			.action(() => {
 				this.program.showHelp()
