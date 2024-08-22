@@ -34,7 +34,10 @@ export class Wallet {
 
 	// Derive the encryption key from a password
 	private async deriveKeyFromPassword(reason: string): Promise<CryptoKey> {
-		const password = await Secret.prompt({ message: reason })
+		const password = await Secret.prompt({
+			message: `${reason}`,
+			writer: Deno.stderr,
+		})
 		const encoder = new TextEncoder()
 		const passwordKey = await crypto.subtle.importKey(
 			'raw',
@@ -62,7 +65,9 @@ export class Wallet {
 	private async encryptMnemonic(mnemonic: string): Promise<Uint8Array> {
 		const iv = crypto.getRandomValues(new Uint8Array(12))
 		const encodedMnemonic = new TextEncoder().encode(mnemonic)
-		const key = await this.deriveKeyFromPassword('Enter encryption password:')
+		const key = await this.deriveKeyFromPassword(
+			'Enter encryption password to secure your mnemonic on this system.',
+		)
 		const encrypted = await crypto.subtle.encrypt(
 			{ name: 'AES-GCM', iv },
 			key,
@@ -73,7 +78,9 @@ export class Wallet {
 
 	// Decrypt the mnemonic
 	private async decryptMnemonic(encryptedMnemonic: Uint8Array): Promise<string> {
-		const key = await this.deriveKeyFromPassword('Enter decryption password:')
+		const key = await this.deriveKeyFromPassword(
+			'Enter your decryption password to access the mnemonic.',
+		)
 		try {
 			const iv = encryptedMnemonic.slice(0, 12)
 			const data = encryptedMnemonic.slice(12)
@@ -82,9 +89,12 @@ export class Wallet {
 				key,
 				data,
 			)
+			console.error('Mnemonic successfully decrypted.')
 			return new TextDecoder().decode(decrypted)
 		} catch {
-			throw new Error('Decryption failed: incorrect password or corrupted data.')
+			throw new Error(
+				'Decryption failed: incorrect password or corrupted data.',
+			)
 		}
 	}
 
@@ -101,6 +111,7 @@ export class Wallet {
 					{ name: 'Regenerate', value: 'r' },
 					{ name: 'View', value: 'v' },
 				],
+				writer: Deno.stderr,
 			})
 
 			if (action === 'd') {
@@ -110,7 +121,7 @@ export class Wallet {
 			} else if (action === 'v') {
 				try {
 					const mnemonic = await this.decryptMnemonic(storedMnemonic!)
-					console.error(mnemonic)
+					console.log(mnemonic)
 				} catch (error) {
 					console.error(error.message)
 				}
@@ -121,31 +132,36 @@ export class Wallet {
 	// Create or import mnemonic
 	private async createOrImportMnemonic(): Promise<string> {
 		const userChoice = await Select.prompt({
-			message: 'No mnemonic found. Do you want to generate or insert a mnemonic?',
+			message:
+				'No mnemonic found. Would you like to generate a new one or insert an existing one? (Ctrl+C to abort)',
 			options: [
-				{ name: 'Generate', value: 'g' },
-				{ name: 'Insert', value: 'i' },
+				{ name: 'Generate a new mnemonic', value: 'g' },
+				{ name: 'Insert an existing mnemonic', value: 'i' },
 			],
+			writer: Deno.stderr,
 		})
 
 		let mnemonic: string
 		if (userChoice === 'i') {
-			mnemonic = await Secret.prompt({ message: 'Please enter your mnemonic:' })
+			mnemonic = await Secret.prompt({
+				message: 'Please enter your existing mnemonic. (Ctrl+C to abort if unsure)',
+				writer: Deno.stderr,
+			})
 		} else {
 			mnemonic = HDWallet.generateMnemonic()
-			console.log('Generated mnemonic:', mnemonic)
+			console.error(`Generated a new mnemonic.\n\n${mnemonic}\n\nBe sure to backup it and store it safely.`)
 		}
 
 		const encryptedMnemonic = await this.encryptMnemonic(mnemonic)
 		await this.writeKeystore(encryptedMnemonic)
-		console.log('Mnemonic stored securely.')
+		console.error('Mnemonic has been stored securely.')
 		return mnemonic
 	}
 
 	// Delete mnemonic
 	private async deleteMnemonic(): Promise<void> {
 		await Deno.remove(this.keystore)
-		console.log('Mnemonic deleted.')
+		console.error('Mnemonic deleted permanently.')
 	}
 
 	// Regenerate mnemonic
@@ -153,7 +169,9 @@ export class Wallet {
 		const mnemonic = HDWallet.generateMnemonic()
 		const encryptedMnemonic = await this.encryptMnemonic(mnemonic)
 		await this.writeKeystore(encryptedMnemonic)
-		console.log('Mnemonic regenerated and stored securely.', mnemonic)
+		console.error(
+			`Mnemonic regenerated and securely stored. Make sure to back it up in a secure way.\n\n${mnemonic} \n`,
+		)
 	}
 
 	// Print mnemonic
@@ -163,12 +181,12 @@ export class Wallet {
 		if (storedMnemonic?.length) {
 			try {
 				const mnemonic = await this.decryptMnemonic(storedMnemonic)
-				console.error(mnemonic)
+				console.log(mnemonic)
 			} catch (error) {
-				console.log('Error retrieving mnemonic:', error.message)
+				console.error('Error retrieving mnemonic:', error.message)
 			}
 		} else {
-			console.error(await this.createOrImportMnemonic())
+			console.log(await this.createOrImportMnemonic())
 		}
 	}
 
@@ -185,9 +203,10 @@ export class Wallet {
 			}
 
 			const privateKey = `0x${this.hdWallet.getPrivateKey(derivationPath).toString('hex')}`
-			console.log('Private Key:', privateKey)
+			console.log(privateKey)
+			console.error('Private key displayed. (Handle with extreme caution.')
 		} catch (error) {
-			console.log(error.message)
+			console.error('Error fetching private key:', error.message)
 		}
 	}
 
