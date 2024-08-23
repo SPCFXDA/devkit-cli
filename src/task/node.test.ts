@@ -51,6 +51,7 @@ function mockEnvSet() {
 Deno.test('NodeTask: constructor should initialize environment and secrets', () => {
 	mockEnvSet()
 	const task = new NodeTask()
+	task.setup()
 	assertEquals(task.secrets.length, 1)
 	assertEquals(task.env.NODE_ROOT, root_path)
 	assertEquals(task.config.chain_id, 1234)
@@ -122,6 +123,7 @@ Deno.test('NodeTask: logs method should throw error if log configuration file do
 Deno.test('NodeTask: logs method should throw error if log file specified in configuration not found', async () => {
 	mockEnvSet()
 	const task = new NodeTask()
+	task.setup()
 	assertRejects(
 		async () => await task.logs(),
 		Error,
@@ -163,6 +165,7 @@ Deno.test('NodeTask: stderr method should return error message if stderr file do
 Deno.test("NodeTask: stderr method should return 'No content to display from stderr.' if stderr file is empty", () => {
 	mockEnvSet()
 	const task = new NodeTask()
+	task.setup()
 	const stderrPath = join(root_path, 'log/stderr.txt')
 	Deno.writeTextFileSync(stderrPath, '')
 	const result = task.stderr()
@@ -173,6 +176,7 @@ Deno.test("NodeTask: stderr method should return 'No content to display from std
 Deno.test('NodeTask: stderr method should return stderr content if stderr file is not empty', () => {
 	mockEnvSet()
 	const task = new NodeTask()
+	task.setup()
 	const stderrPath = join(root_path, 'log/stderr.txt')
 	Deno.writeTextFileSync(stderrPath, 'Error message\nAnother error message')
 	const result = task.stderr()

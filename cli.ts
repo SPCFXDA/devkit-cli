@@ -41,6 +41,15 @@ export class DevkitCLI {
 		}
 	}
 
+	async isDirectoryEmpty(path: string): Promise<boolean> {
+		for await (const _ of Deno.readDir(path)) {
+			// If we enter the loop, the directory has at least one item.
+			return false
+		}
+		// If we never enter the loop, the directory is empty.
+		return true
+	}
+
 	private initializeCommands(): void {
 		this.program
 			.command('start')
@@ -49,6 +58,10 @@ export class DevkitCLI {
 			.option('--scan [scan:boolean]', 'Scan the node for transactions after starting', { default: false })
 			.action(async ({ logs, scan }) => {
 				await this.handleKia('Starting the node', async () => {
+					if (await this.isDirectoryEmpty(this.cfxNode.env.NODE_ROOT) && await this.wallet.mnemonicCheck()) {
+						this.cfxNode.secrets = await this.wallet.corePrivateKeyBatch(0, 9)
+					}
+					this.cfxNode.setup()
 					const boot = this.cfxNode.start()
 					if (boot.code) {
 						throw new Error(`Node already running PID(${boot.pid})`)
@@ -169,11 +182,11 @@ export class DevkitCLI {
 			.option('--index [index:number]', 'Index for key derivation', { default: 0 })
 			.action(async ({ espace, core, index, derivationPath }) => {
 				if (core) {
-					await this.wallet.printCorePrivateKey(index as number)
+					console.log(await this.wallet.corePrivateKey(index as number))
 				} else if (espace) {
-					await this.wallet.printEspacePrivateKey(index as number)
+					console.log(await this.wallet.espacePrivateKey(index as number))
 				} else if (derivationPath) {
-					await this.wallet.printPrivateKeyByDerivationPath(derivationPath as string)
+					console.log(await this.wallet.privateKeyByDerivationPath(derivationPath as string))
 				} else {
 					console.log('Invalid options.')
 				}

@@ -31,7 +31,7 @@ export class NodeTask extends SetupTask {
 	 * @returns {{ code: number; pid: string | null }} An object containing the exit code and process ID.
 	 */
 	start(): { code: number; pid: string | null } {
-		this.setup()
+		// this.setup()
 		const pid = this.getPid()
 		if (pid) {
 			return { code: 1, pid }

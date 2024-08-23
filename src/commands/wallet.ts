@@ -7,11 +7,17 @@ import { join } from '@std/path'
 export class Wallet {
 	private hdWallet: HDWallet | undefined
 	private keystore: string
-
+	private plaintextKeystore: string
+	private storedMnemonic: string | Uint8Array | null
+	private mnemonicSource: 'plaintext' | 'encrypted' | null
 	constructor() {
 		this.hdWallet = undefined
 		this.keystore = join(Deno.env.get('HOME') || '', '.devkit.keystore')
+		this.plaintextKeystore = join(Deno.env.get('HOME') || '', '.devkit.keystore.plaintext')
+		this.storedMnemonic = null
+		this.mnemonicSource = null
 		ensureFileSync(this.keystore)
+		ensureFileSync(this.plaintextKeystore)
 	}
 
 	// Read the keystore file
@@ -27,9 +33,27 @@ export class Wallet {
 		}
 	}
 
+	// Read the plaintext keystore file
+	private async readPlaintextKeystore(): Promise<string | null> {
+		try {
+			const data = await Deno.readTextFile(this.plaintextKeystore)
+			return data
+		} catch (error) {
+			if (error instanceof Deno.errors.NotFound) {
+				return null
+			}
+			throw error
+		}
+	}
+
 	// Write the encrypted mnemonic to the keystore file
 	private async writeKeystore(data: Uint8Array): Promise<void> {
 		await Deno.writeFile(this.keystore, data)
+	}
+
+	// Write the mnemonic to the plaintext keystore file
+	private async writePlaintextKeystore(mnemonic: string): Promise<void> {
+		await Deno.writeTextFile(this.plaintextKeystore, mnemonic)
 	}
 
 	// Derive the encryption key from a password
@@ -98,29 +122,47 @@ export class Wallet {
 		}
 	}
 
+	async mnemonicCheck() {
+		this.storedMnemonic = await this.readPlaintextKeystore()
+		if (this.storedMnemonic !== '') {
+			this.mnemonicSource = 'plaintext'
+		} else {
+			this.storedMnemonic = await this.readKeystore()
+			if (this.storedMnemonic?.length) {
+				this.mnemonicSource = 'encrypted'
+			}
+		}
+		return this.mnemonicSource
+	}
+
 	// Configure the mnemonic
 	async configureMnemonic() {
-		const storedMnemonic = await this.readKeystore()
-		if (!storedMnemonic?.length) {
+		await this.mnemonicCheck()
+		if (!this.mnemonicSource) {
 			await this.createOrImportMnemonic()
-		} else {
-			const action = await Select.prompt({
-				message: 'Mnemonic found. Do you want to delete, regenerate, or view it?',
-				options: [
-					{ name: 'Delete', value: 'd' },
-					{ name: 'Regenerate', value: 'r' },
-					{ name: 'View', value: 'v' },
-				],
-				writer: Deno.stderr,
-			})
+			return
+		}
 
-			if (action === 'd') {
-				await this.deleteMnemonic()
-			} else if (action === 'r') {
-				await this.regenerateMnemonic()
-			} else if (action === 'v') {
+		const action = await Select.prompt({
+			message: 'Mnemonic found. Do you want to delete, regenerate, or view it?',
+			options: [
+				{ name: 'Delete', value: 'd' },
+				{ name: 'Regenerate', value: 'r' },
+				{ name: 'View', value: 'v' },
+			],
+			writer: Deno.stderr,
+		})
+
+		if (action === 'd') {
+			await this.deleteMnemonic()
+		} else if (action === 'r') {
+			await this.regenerateMnemonic()
+		} else if (action === 'v') {
+			if (this.mnemonicSource === 'plaintext') {
+				console.log(this.storedMnemonic as string)
+			} else {
 				try {
-					const mnemonic = await this.decryptMnemonic(storedMnemonic!)
+					const mnemonic = await this.decryptMnemonic(this.storedMnemonic as Uint8Array)
 					console.log(mnemonic)
 				} catch (error) {
 					console.error(error.message)
@@ -131,6 +173,15 @@ export class Wallet {
 
 	// Create or import mnemonic
 	private async createOrImportMnemonic(): Promise<string> {
+		const storageChoice = await Select.prompt({
+			message: 'Choose storage option for the mnemonic:',
+			options: [
+				{ name: 'Store encrypted', value: 'e' },
+				{ name: 'Store in plaintext', value: 'p' },
+			],
+			writer: Deno.stderr,
+		})
+
 		const userChoice = await Select.prompt({
 			message:
 				'No mnemonic found. Would you like to generate a new one or insert an existing one? (Ctrl+C to abort)',
@@ -152,23 +203,39 @@ export class Wallet {
 			console.error(`Generated a new mnemonic.\n\n${mnemonic}\n\nBe sure to backup it and store it safely.`)
 		}
 
-		const encryptedMnemonic = await this.encryptMnemonic(mnemonic)
-		await this.writeKeystore(encryptedMnemonic)
-		console.error('Mnemonic has been stored securely.')
+		if (storageChoice === 'p') {
+			await this.writePlaintextKeystore(mnemonic)
+			console.error('Mnemonic has been stored in plaintext.')
+		} else {
+			const encryptedMnemonic = await this.encryptMnemonic(mnemonic)
+			await this.writeKeystore(encryptedMnemonic)
+			console.error('Mnemonic has been stored securely.')
+		}
+
 		return mnemonic
 	}
 
 	// Delete mnemonic
 	private async deleteMnemonic(): Promise<void> {
-		await Deno.remove(this.keystore)
+		if (this.mnemonicSource === 'plaintext') {
+			await Deno.remove(this.plaintextKeystore).catch(() => {})
+		} else {
+			await Deno.remove(this.keystore).catch(() => {})
+		}
 		console.error('Mnemonic deleted permanently.')
 	}
 
 	// Regenerate mnemonic
 	private async regenerateMnemonic(): Promise<void> {
 		const mnemonic = HDWallet.generateMnemonic()
-		const encryptedMnemonic = await this.encryptMnemonic(mnemonic)
-		await this.writeKeystore(encryptedMnemonic)
+		if (this.mnemonicSource === 'plaintext') {
+			await this.writePlaintextKeystore(mnemonic)
+			console.error('Mnemonic regenerated and stored in plaintext.')
+		} else {
+			const encryptedMnemonic = await this.encryptMnemonic(mnemonic)
+			await this.writeKeystore(encryptedMnemonic)
+			console.error('Mnemonic regenerated and securely stored.')
+		}
 		console.error(
 			`Mnemonic regenerated and securely stored. Make sure to back it up in a secure way.\n\n${mnemonic} \n`,
 		)
@@ -176,6 +243,12 @@ export class Wallet {
 
 	// Print mnemonic
 	async printMnemonic(): Promise<void> {
+		const storedPlaintextMnemonic = await this.readPlaintextKeystore()
+		if (storedPlaintextMnemonic) {
+			console.log(storedPlaintextMnemonic)
+			return
+		}
+
 		const storedMnemonic = await this.readKeystore()
 
 		if (storedMnemonic?.length) {
@@ -191,34 +264,54 @@ export class Wallet {
 	}
 
 	// Print private key by derivation path
-	async printPrivateKeyByDerivationPath(derivationPath: string): Promise<void> {
+	async privateKeyByDerivationPath(derivationPath: string): Promise<string | null> {
+		let privateKey: string | null = null
 		try {
 			if (!this.hdWallet) {
-				const storedMnemonic = await this.readKeystore()
-				if (!storedMnemonic) {
-					this.hdWallet = new HDWallet(await this.createOrImportMnemonic())
+				let mnemonic: string
+				const storedPlaintextMnemonic = await this.readPlaintextKeystore()
+
+				if (storedPlaintextMnemonic) {
+					mnemonic = storedPlaintextMnemonic
 				} else {
-					this.hdWallet = new HDWallet(await this.decryptMnemonic(storedMnemonic))
+					const storedMnemonic = await this.readKeystore()
+					if (!storedMnemonic) {
+						mnemonic = await this.createOrImportMnemonic()
+					} else {
+						mnemonic = await this.decryptMnemonic(storedMnemonic)
+					}
 				}
+				this.hdWallet = new HDWallet(mnemonic)
 			}
 
-			const privateKey = `0x${this.hdWallet.getPrivateKey(derivationPath).toString('hex')}`
-			console.log(privateKey)
-			console.error('Private key displayed. (Handle with extreme caution.')
+			privateKey = `0x${this.hdWallet.getPrivateKey(derivationPath).toString('hex')}`
+			// console.error('Private key displayed. (Handle with extreme caution.)')
 		} catch (error) {
 			console.error('Error fetching private key:', error.message)
 		}
+		return privateKey
 	}
 
 	// Print Espace private key
-	async printEspacePrivateKey(index: number): Promise<void> {
+	async espacePrivateKey(index: number): Promise<string | null> {
 		const derivationPath = `m/44'/60'/0'/0/${index}`
-		await this.printPrivateKeyByDerivationPath(derivationPath)
+		return await this.privateKeyByDerivationPath(derivationPath)
 	}
 
 	// Print Core private key
-	async printCorePrivateKey(index: number): Promise<void> {
+	async corePrivateKey(index: number): Promise<string | null> {
 		const derivationPath = `m/44'/503'/0'/0/${index}`
-		await this.printPrivateKeyByDerivationPath(derivationPath)
+		return await this.privateKeyByDerivationPath(derivationPath)
+	}
+
+	async corePrivateKeyBatch(from: number, to: number): Promise<string[]> {
+		const privateKeys = []
+		for (let index = from; index <= to; index++) {
+			const pk = await this.corePrivateKey(index)
+			if (pk) {
+				privateKeys.push(pk)
+			}
+		}
+		return privateKeys
 	}
 }

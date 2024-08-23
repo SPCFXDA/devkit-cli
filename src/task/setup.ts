@@ -28,7 +28,7 @@ export class SetupTask extends BaseTask {
 	/**
 	 * Constructs a new instance of SetupTask and initializes paths and configuration.
 	 */
-	constructor(setup: boolean = true) {
+	constructor() {
 		super()
 		this.env = new ConfluxConfig()
 		this.secrets = []
@@ -39,14 +39,10 @@ export class SetupTask extends BaseTask {
 		}
 		if (!existsSync(this.env.CONFIG_PATH)) {
 			this.config = new DevConfigGenerator(this.env).generateConfig()
-			this.writeConfig()
 		} else {
 			this.config = parse(
 				Deno.readTextFileSync(this.env.CONFIG_PATH),
 			) as unknown as NodeConfig
-		}
-		if (setup) {
-			this.setup()
 		}
 	}
 
@@ -61,6 +57,7 @@ export class SetupTask extends BaseTask {
 			this.generateLogConfig()
 			this.generatePosConfig()
 			this.generateSecrets()
+			this.writeConfig()
 		} catch (error) {
 			console.error(
 				'An error occurred during initialization:',
@@ -127,8 +124,7 @@ export class SetupTask extends BaseTask {
 			this.config.chain_id,
 		)
 		this.config.mining_author = miningAccount.address
-		this.writeConfig()
-		this.secrets = [miningAccount.privateKey]
+		this.secrets.push(miningAccount.privateKey)
 		this.writeSecrets()
 	}
 

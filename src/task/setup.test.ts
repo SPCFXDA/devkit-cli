@@ -49,6 +49,7 @@ function mockEnvSet() {
 Deno.test('SetupTask: constructor should initialize environment and secrets', () => {
 	mockEnvSet()
 	const task = new SetupTask()
+	task.setup()
 	assertEquals(task.secrets.length, 1)
 	assertEquals(task.env.NODE_ROOT, root_path)
 	assertEquals(task.config.chain_id, 1234)
@@ -78,7 +79,7 @@ Deno.test('SetupTask: setup method should handle errors gracefully', () => {
 Deno.test('SetupTask: secretExist should return false when secrets file does not exist', () => {
 	mockEnvSet()
 
-	const task = new SetupTask(false)
+	const task = new SetupTask()
 	const result = task.secretExist()
 	assertEquals(result, false)
 	mockEnvClean()
@@ -118,7 +119,7 @@ Deno.test('SetupTask: writeConfig should write config to file', () => {
 Deno.test('SetupTask: generateSecrets should generate new secrets if they do not exist', () => {
 	mockEnvSet()
 
-	const task = new SetupTask(false)
+	const task = new SetupTask()
 	const writeSecretsSpy = spy(task, 'writeSecrets')
 	const writeConfigSpy = spy(task, 'writeConfig')
 
@@ -126,7 +127,7 @@ Deno.test('SetupTask: generateSecrets should generate new secrets if they do not
 
 	assertEquals(task.secrets.length, 1)
 	assertEquals(writeSecretsSpy.calls.length, 1)
-	assertEquals(writeConfigSpy.calls.length, 1)
+	assertEquals(writeConfigSpy.calls.length, 0)
 	writeSecretsSpy.restore()
 	writeConfigSpy.restore()
 	mockEnvClean()
@@ -134,7 +135,7 @@ Deno.test('SetupTask: generateSecrets should generate new secrets if they do not
 
 Deno.test('SetupTask: generatePosConfig should create POS config if it does not exist', async () => {
 	mockEnvSet()
-	const task = new SetupTask(false)
+	const task = new SetupTask()
 	await task.generatePosConfig()
 	assertEquals(existsSync(task.config.pos_config_path), true)
 	mockEnvClean()
@@ -143,7 +144,7 @@ Deno.test('SetupTask: generatePosConfig should create POS config if it does not 
 Deno.test('SetupTask: generateLogConfig should create log config if it does not exist', () => {
 	mockEnvSet()
 
-	const task = new SetupTask(false)
+	const task = new SetupTask()
 	task.generateLogConfig()
 	assertEquals(existsSync(task.config.log_conf), true)
 	mockEnvClean()
@@ -152,7 +153,7 @@ Deno.test('SetupTask: generateLogConfig should create log config if it does not 
 Deno.test('SetupTask: readSecrets should read and format secrets from file', () => {
 	mockEnvSet()
 
-	const task = new SetupTask(false)
+	const task = new SetupTask()
 	Deno.writeTextFileSync(
 		task.config.genesis_secrets,
 		'abcdef\nghijkl\n',
