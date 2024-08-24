@@ -40,7 +40,7 @@ export class Faucet extends ClientTask {
 			Deno.exit(1)
 		}
 
-		const miner = this.confluxClient.wallet.addPrivateKey(this.readSecrets()[0])
+		const miner = this.confluxClient.wallet.addPrivateKey(this.readSecrets().at(-1))
 		const balance: string = await this.getCoreBalance(miner.address)
 
 		kia.succeed(`Faucet balance: ${balance} CFX`)
@@ -118,4 +118,4 @@ export class Faucet extends ClientTask {
  * @example
  * faucet.execute({ value: '10', to: '0x123...' });
  */
-export const faucet = new Faucet()
+export const faucet: Faucet = new Faucet()

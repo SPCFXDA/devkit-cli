@@ -1,8 +1,10 @@
 import { Command } from 'cliffy/command'
-import Kia from 'kia'
 import { ClientTask } from './src/task/mod.ts'
 import { Balance, Faucet, Scan, Wallet } from './src/commands/mod.ts'
 import denojson from './deno.json' with { type: 'json' }
+import { privateKeyToAccount } from 'viem/accounts'
+import { delay } from '@std/async/delay'
+import { CliSpinner } from './src/spinner.ts'
 
 export class DevkitCLI {
 	private cfxNode: ClientTask
@@ -10,13 +12,14 @@ export class DevkitCLI {
 	private faucet: Faucet
 	private wallet: Wallet
 	private program: Command
+	private cs: CliSpinner
 
 	constructor() {
 		this.cfxNode = new ClientTask()
 		this.balance = new Balance()
 		this.faucet = new Faucet()
 		this.wallet = new Wallet()
-
+		this.cs = new CliSpinner()
 		this.program = new Command()
 			.name('devkit-cli')
 			.version(denojson.version)
@@ -28,18 +31,18 @@ export class DevkitCLI {
 		this.initializeCommands()
 	}
 
-	private async handleKia(taskName: string, task: () => Promise<void>): Promise<void> {
-		const kia = new Kia(`${taskName}...`)
-		kia.start()
-		try {
-			await task()
-			kia.stop()
-			kia.succeed(`${taskName} completed!`)
-		} catch (error) {
-			kia.fail(`Failed: ${error.message}`)
-			Deno.exit(1)
-		}
-	}
+	// private async handleKia(taskName: string, task: () => Promise<void>): Promise<void> {
+	// 	const kia = new Kia(`${taskName}...`)
+	// 	kia.start()
+	// 	try {
+	// 		await task()
+	// 		kia.stop()
+	// 		kia.succeed(`${taskName} completed!`)
+	// 	} catch (error) {
+	// 		kia.fail(`Failed: ${error.message}`)
+	// 		Deno.exit(1)
+	// 	}
+	// }
 
 	async isDirectoryEmpty(path: string): Promise<boolean> {
 		for await (const _ of Deno.readDir(path)) {
@@ -57,17 +60,50 @@ export class DevkitCLI {
 			.option('--logs [logs:boolean]', 'Display logs after starting', { default: false })
 			.option('--scan [scan:boolean]', 'Scan the node for transactions after starting', { default: false })
 			.action(async ({ logs, scan }) => {
-				await this.handleKia('Starting the node', async () => {
+				try {
+					let init = false
+					this.cs.start('Validating configuration')
 					if (await this.isDirectoryEmpty(this.cfxNode.env.NODE_ROOT) && await this.wallet.mnemonicCheck()) {
+						this.cs.stop()
+						console.log('Found mnemonic during initialization, deriving genesis private keys from mnemonic')
 						this.cfxNode.secrets = await this.wallet.corePrivateKeyBatch(0, 9)
+						init = true
+						this.cs.start()
 					}
+					this.cs.set('Starting the node..')
 					this.cfxNode.setup()
 					const boot = this.cfxNode.start()
 					if (boot.code) {
 						throw new Error(`Node already running PID(${boot.pid})`)
 					}
+					this.cs.set('Node bootstrap...')
 					await this.cfxNode.status()
-				})
+					if (init) {
+						const espacePks = await this.wallet.espacePrivateKeyBatch(0, 9)
+						this.cs.set('Initializing CrossSpaceCall...')
+						await delay(3000)
+						for (let index = 0; index < espacePks.length; index++) {
+							this.cs.set(`initializing account ${index + 1}/${espacePks.length}`)
+							const coreAccount = await this.cfxNode.confluxClient.wallet.addPrivateKey(
+								this.cfxNode.secrets[index],
+							)
+							const espaceAddress = await this.wallet.espaceAddress(null, espacePks[index])
+							const coreAddress = await this.wallet.coreAddress(null, this.cfxNode.secrets[index])
+							const _receipt = await this.cfxNode.confluxClient.InternalContract('CrossSpaceCall')
+								.transferEVM(espaceAddress)
+								.sendTransaction({
+									from: coreAccount.address,
+									value: this.cfxNode.fromCfx(5000),
+								})
+								.executed()
+						}
+					}
+				} catch (error) {
+					this.cs.fail(error)
+					Deno.exit(1)
+				}
+				this.cs.succeed('Node started successfully!')
+
 				if (logs) {
 					await this.cfxNode.logs()
 				} else if (scan) {
@@ -81,9 +117,14 @@ export class DevkitCLI {
 			.command('stop')
 			.description('Stop the development node')
 			.action(async () => {
-				await this.handleKia('Stopping the node', async () => {
+				this.cs.start('Stopping the node')
+				try {
 					this.cfxNode.stop()
-				})
+					this.cs.succeed('Node stopped!')
+				} catch (error) {
+					this.cs.fail(error)
+				}
+				this.cs.stop()
 			})
 
 		this.program
@@ -91,41 +132,42 @@ export class DevkitCLI {
 			.description('Scan the node for transactions')
 			.action(async () => {
 				const scan = new Scan()
-				await this.handleKia('Scanner start', async () => {
+				try {
+					this.cs.start('Scanner start')
 					await this.cfxNode.status()
+					this.cs.stop()
 					scan.run()
-				})
+				} catch (error) {
+					this.cs.fail(error)
+				}
 			})
 
 		this.program
 			.command('status')
 			.description('Show the node status')
 			.action(async () => {
-				let status
-				await this.handleKia('Retrieving status', async () => {
-					status = await this.cfxNode.status()
-				})
-				console.log(status)
+				try {
+					this.cs.start('Retriving node status...')
+					const status = await this.cfxNode.status()
+					this.cs.stop()
+					console.log(status)
+				} catch (error) {
+					this.cs.fail(error)
+				}
 			})
 
 		this.program
 			.command('logs')
 			.description('Show node logs')
 			.action(async () => {
-				await this.handleKia('Retrieving logs', async () => {
-					await this.cfxNode.logs()
-				})
+				await this.cfxNode.logs()
 			})
 
 		this.program
 			.command('errors')
 			.description('Show any errors the node produced')
 			.action(async () => {
-				let errors
-				await this.handleKia('Retrieving errors', async () => {
-					errors = await this.cfxNode.stderr()
-				})
-				console.log(errors)
+				console.log(this.cfxNode.stderr())
 			})
 
 		this.program
@@ -187,6 +229,22 @@ export class DevkitCLI {
 					console.log(await this.wallet.espacePrivateKey(index as number))
 				} else if (derivationPath) {
 					console.log(await this.wallet.privateKeyByDerivationPath(derivationPath as string))
+				} else {
+					console.log('Invalid options.')
+				}
+			})
+
+		walletCommand
+			.command('address')
+			.description('Derive address from mnemonic')
+			.option('--espace [espace:boolean]', 'Use the eSpace network', { default: true })
+			.option('--core [core:boolean]', 'Use the core network')
+			.option('--index [index:number]', 'Index for key derivation', { default: 0 })
+			.action(async ({ espace, core, index }) => {
+				if (core) {
+					console.log(await this.wallet.coreAddress(index as number))
+				} else if (espace) {
+					console.log(await this.wallet.espaceAddress(index as number))
 				} else {
 					console.log('Invalid options.')
 				}

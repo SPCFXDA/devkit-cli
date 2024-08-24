@@ -4,8 +4,10 @@
     "specifiers": {
       "jsr:@std/assert@^1.0.2": "jsr:@std/assert@1.0.2",
       "jsr:@std/async@^1.0.3": "jsr:@std/async@1.0.3",
+      "jsr:@std/cli@^1.0.3": "jsr:@std/cli@1.0.3",
       "jsr:@std/collections@^1.0.4": "jsr:@std/collections@1.0.5",
       "jsr:@std/crypto@^1.0.2": "jsr:@std/crypto@1.0.2",
+      "jsr:@std/data-structures@^1.0.1": "jsr:@std/data-structures@1.0.1",
       "jsr:@std/fmt@^1.0.0": "jsr:@std/fmt@1.0.0",
       "jsr:@std/fs@^1.0.1": "jsr:@std/fs@1.0.1",
       "jsr:@std/internal@^1.0.1": "jsr:@std/internal@1.0.1",
@@ -14,6 +16,7 @@
       "jsr:@std/toml@^1.0.0": "jsr:@std/toml@1.0.0",
       "jsr:@std/yaml@^1.0.2": "jsr:@std/yaml@1.0.2",
       "npm:@conflux-dev/hdwallet@^0.1.2": "npm:@conflux-dev/hdwallet@0.1.2",
+      "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:js-conflux-sdk@^2.4.7": "npm:js-conflux-sdk@2.4.7"
     },
     "jsr": {
@@ -26,11 +29,17 @@
       "@std/async@1.0.3": {
         "integrity": "6ed64678db43451683c6c176a21426a2ccd21ba0269ebb2c36133ede3f165792"
       },
+      "@std/cli@1.0.3": {
+        "integrity": "9a0488b5d2e58d29dce106a941eecec7181fae996bf0d2225563f1ca7e4b100c"
+      },
       "@std/collections@1.0.5": {
         "integrity": "ab9eac23b57a0c0b89ba45134e61561f69f3d001f37235a248ed40be260c0c10"
       },
       "@std/crypto@1.0.2": {
         "integrity": "bb515dbcd4d67aacf0ffece643a434811ea06e5b544f03c33ba58552fbdb87c7"
+      },
+      "@std/data-structures@1.0.1": {
+        "integrity": "e4fa6bcc33839979ac118e2746f349cd7b57c58bd3036b5b82ac608771ee856e"
       },
       "@std/fmt@1.0.0": {
         "integrity": "8a95c9fdbb61559418ccbc0f536080cf43341655e1444f9d375a66886ceaaa3d"
@@ -50,7 +59,11 @@
       "@std/testing@1.0.0": {
         "integrity": "27cfc06392c69c2acffe54e6d0bcb5f961cf193f519255372bd4fff1481bfef8",
         "dependencies": [
-          "jsr:@std/assert@^1.0.2"
+          "jsr:@std/assert@^1.0.2",
+          "jsr:@std/data-structures@^1.0.1",
+          "jsr:@std/fs@^1.0.1",
+          "jsr:@std/internal@^1.0.1",
+          "jsr:@std/path@^1.0.2"
         ]
       },
       "@std/toml@1.0.0": {
@@ -83,6 +96,10 @@
       },
       "@noble/hashes@1.4.0": {
         "integrity": "sha512-V1JJ1WTRUqHHrOSh597hURcMqVKVGL/ea3kv0gSnEdsEZ0/+VyPghM1lMNGc00z7CIQorSvbKpuJkxvuHbvdbg==",
+        "dependencies": {}
+      },
+      "@types/node@18.16.19": {
+        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
         "dependencies": {}
       },
       "abi-util-lite@0.1.0": {
@@ -903,6 +920,7 @@
     "https://deno.land/std@0.97.0/testing/asserts.ts": "341292d12eebc44be4c3c2ca101ba8b6b5859cef2fa69d50c217f9d0bfbcfd1f",
     "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/ansi_escapes.ts": "193b3c3a4e520274bd8322ca4cab1c3ce38070bed1898cb2ade12a585dddd7c9",
     "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/chain.ts": "eca61b1b64cad7b9799490c12c7aa5538d0f63ac65a73ddb6acac8b35f0a5323",
+    "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/colors.ts": "21c6702197d0871c700279d22fc54e4b15152be4ece1f433d6714595b018d265",
     "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/cursor_position.ts": "7a07410b312885db92ada9ecab095db0ff72ffe339b4e2d31e8c705f2c60c7fa",
     "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/deps.ts": "4d93b041735f4967fa56c7aeb6be490c07522fb81c419f5fe3bef6b72190db8c",
     "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/tty.ts": "a42ec713ff18186492c4b5184039d4f54174065773fa5833330b543c53bb4d79",
@@ -1037,21 +1055,38 @@
     "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/_md.js": "0d64256a7f57db1a32538d1785a6f2b4c292962b526f50774542c71f6eca00be",
     "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/crypto.js": "e8ce6f1233e496ccda7379228aa8426017735bedad6a497bf0dd61fc832cdf79",
     "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/hmac.js": "9068c257616e936e8c005e0fd4f8fbe8018e2414977701933f84fe2c83c6b8cc",
+    "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/pbkdf2.js": "cc8666e89780b5877ddda6b04ef10d98f75e1762f896b99921e8e350f478f609",
     "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/ripemd160.js": "5820f34f8cc035a7166585f5440c76ce10d3239d07dbfbda45793cc51631b2ad",
     "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/sha256.js": "907b6235f813a743240f7c78e4cb9be27e92eb911d5b90f44f7c138f257259a1",
     "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/sha3.js": "420c5eb42bd3d497f6cfa510947b095dce70db4e5bc3d6e53d6678ac41420006",
+    "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/sha512.js": "f004f9f72ffc4e1af353c2b42a0c4a331415322e6af1ba2f756602e6cbf0136b",
     "https://esm.sh/v135/@noble/hashes@1.4.0/denonext/utils.js": "ab93c0722cdd5d75695482b9bcc4d514d61934595204030a9881a09488be3634",
+    "https://esm.sh/v135/@scure/base@1.1.6/denonext/base.mjs": "7c4c43cca9644ce6301e900ab7edcfebfd057ca778fa0efdd0cb746ae4339c6a",
+    "https://esm.sh/v135/@scure/bip32@1.4.0/denonext/bip32.mjs": "8e6c03844b799a21055aa606b4766f81a454c33613776ba1a5ea2e3cc1af8b1b",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/bip39.mjs": "f9c5eec125aa321c7fbcb0111ba58d9ddda3a3c3c21146745b9eecb02e766329",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/czech.js": "794c1b26a7773291bf1b5df67498309be1d1e158356aabe53ff30d2aa04dfab0",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/english.js": "8f8a5a45991b59a7e0ae7b9b1a08da01b93dc53c98d405410c14ab5c1fdd55e1",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/french.js": "8bdd1e511f110bfb38a39f01ee7a80777ca823c30fc819f0b5389883a003125e",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/italian.js": "7c068acbaa5992943816f4dddc8197dc74d623f66cfb95d72704ddbfc9d5119f",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/japanese.js": "b178912a98be733dd69d1b20b53599ddbeb822f65686eb25584596eecb51ace5",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/korean.js": "504c54e1a7802d8829b86907afab38c3d5ffe26055e164856f0d98ff9cc6c5a1",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/simplified-chinese.js": "397767d425ec4f50f4e7d7ef8d367641c9de7ebf41a5ee83d537289609e83bfe",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/spanish.js": "1f2fd047abdacda12a221975de0a1ba0d23c3462903edcc1a1a497e2a3810331",
+    "https://esm.sh/v135/@scure/bip39@1.3.0/denonext/wordlists/traditional-chinese.js": "bc4d3728d10b0162f5d5554211b0634003d1570b9686c5a48581702b54676125",
     "https://esm.sh/v135/abitype@1.0.5/denonext/abitype.mjs": "fa76009a9ba13c4077854096b3ae4e28e089ab9c2ee101aff57d59988aac4e64",
     "https://esm.sh/v135/isows@1.0.4/denonext/isows.mjs": "30baa0a847030cca9b2787a03c57ac052fea25a1b732597fd25c13ff93e9bade",
     "https://esm.sh/v135/viem@2.18.8/denonext/_esm/utils/ccip.js": "5b92fcf904677c3c009e43ef15edbca9a8df87792d7d39f45e50ab1a015b03ef",
+    "https://esm.sh/v135/viem@2.18.8/denonext/accounts.js": "f0dbc55ecbb368894b947904f3a0abf842c54175ac5f776ac570f9cd5af8573b",
     "https://esm.sh/v135/viem@2.18.8/denonext/utils.js": "359e49aeb93425b38df43a6ae9c047a3262b50b0a28ef2dae5f7853ab0f5c552",
     "https://esm.sh/v135/viem@2.18.8/denonext/viem.mjs": "d07173eef47c9591cb1808e9db85bfda69afccddaa768de679ec6bec5268a56d",
-    "https://esm.sh/viem@2.18.8": "2fb207543ebad899701ae570cc50ecd6700573f9dd82ba59fc3be998a0b1a217"
+    "https://esm.sh/viem@2.18.8": "2fb207543ebad899701ae570cc50ecd6700573f9dd82ba59fc3be998a0b1a217",
+    "https://esm.sh/viem@2.18.8/accounts": "e228ed81df0d6e43551340749ab5166c3c96861be47c1d4dafafb58470ff49d6"
   },
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@^1.0.2",
       "jsr:@std/async@^1.0.3",
+      "jsr:@std/cli@^1.0.3",
       "jsr:@std/crypto@^1.0.2",
       "jsr:@std/fmt@^1.0.0",
       "jsr:@std/fs@^1.0.1",

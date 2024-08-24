@@ -3,6 +3,9 @@ import { HDWallet } from '@conflux-dev/hdwallet'
 import { Secret, Select } from 'cliffy/prompt'
 import { ensureFileSync } from '@std/fs'
 import { join } from '@std/path'
+import { privateKeyToAccount } from 'viem/accounts'
+import TreeGraph from 'js-conflux-sdk'
+import { Address } from 'viem'
 
 export class Wallet {
 	private hdWallet: HDWallet | undefined
@@ -304,10 +307,54 @@ export class Wallet {
 		return await this.privateKeyByDerivationPath(derivationPath)
 	}
 
+	async espaceAddress(index: number | null = null, privateKey: string | null = null): Promise<string | null> {
+		if ((index === null && privateKey === null) || (index !== null && privateKey !== null)) {
+			throw new Error("Invalid parameters: provide either 'index' or 'privateKey', but not both.")
+		}
+
+		if (index !== null) {
+			privateKey = await this.espacePrivateKey(index)
+		}
+
+		return privateKeyToAccount(privateKey as Address).address
+	}
+
+	// Print Core private key
+	async coreAddress(
+		index: number | null = null,
+		privateKey: string | null = null,
+		rpcUrl: string = 'http://localhost:12537',
+		networkId: number = 2029,
+	): Promise<string | null> {
+		if ((index === null && privateKey === null) || (index !== null && privateKey !== null)) {
+			throw new Error("Invalid parameters: provide either 'index' or 'privateKey', but not both.")
+		}
+		const conflux = new TreeGraph.Conflux({
+			url: rpcUrl,
+			networkId: networkId,
+		})
+
+		if (index !== null) {
+			privateKey = await this.corePrivateKey(index)
+		}
+		return conflux.wallet.addPrivateKey(privateKey).address
+	}
+
 	async corePrivateKeyBatch(from: number, to: number): Promise<string[]> {
 		const privateKeys = []
 		for (let index = from; index <= to; index++) {
 			const pk = await this.corePrivateKey(index)
+			if (pk) {
+				privateKeys.push(pk)
+			}
+		}
+		return privateKeys
+	}
+
+	async espacePrivateKeyBatch(from: number, to: number): Promise<string[]> {
+		const privateKeys = []
+		for (let index = from; index <= to; index++) {
+			const pk = await this.espacePrivateKey(index)
 			if (pk) {
 				privateKeys.push(pk)
 			}
