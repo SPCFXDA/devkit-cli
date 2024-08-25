@@ -81,14 +81,15 @@ export class DevkitCLI {
 					if (init) {
 						const espacePks = await this.wallet.espacePrivateKeyBatch(0, 9)
 						this.cs.set('Initializing CrossSpaceCall...')
-						await delay(3000)
+						//NOTE: node in catchup mode
+						//find a verification of node fully operational status instead of the delay
+						await delay(8000)
 						for (let index = 0; index < espacePks.length; index++) {
-							this.cs.set(`initializing account ${index + 1}/${espacePks.length}`)
 							const coreAccount = await this.cfxNode.confluxClient.wallet.addPrivateKey(
 								this.cfxNode.secrets[index],
 							)
 							const espaceAddress = await this.wallet.espaceAddress(null, espacePks[index])
-							const coreAddress = await this.wallet.coreAddress(null, this.cfxNode.secrets[index])
+							this.cs.set(`initializing account ${index + 1}/${espacePks.length}`)
 							const _receipt = await this.cfxNode.confluxClient.InternalContract('CrossSpaceCall')
 								.transferEVM(espaceAddress)
 								.sendTransaction({
