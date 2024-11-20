@@ -16,7 +16,7 @@ Deno.test('BaseTask: execute method should throw an error if not overridden', as
 Deno.test('BaseTask: run method should catch and format errors', async () => {
 	class TestTask extends BaseTask {
 		// deno-lint-ignore require-await
-		protected async execute(
+		protected override async execute(
 			_options?: Record<string, unknown>,
 		): Promise<void> {
 			throw new Error('Test error')

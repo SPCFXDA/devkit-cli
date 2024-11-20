@@ -57,7 +57,7 @@ export class ClientTask extends NodeTask {
 	 * @param {Record<string, unknown>} [options] - Optional parameters for the task execution.
 	 * @returns {Promise<void>} A promise that resolves when the task is complete.
 	 */
-	async run(options?: Record<string, unknown> | undefined): Promise<void> {
+	override async run(options?: Record<string, unknown> | undefined): Promise<void> {
 		try {
 			return await this.execute(options)
 		} catch (error: unknown) {
@@ -163,5 +163,28 @@ export class ClientTask extends NodeTask {
 		}
 
 		throw new Error('Failed to fetch status after multiple attempts.')
+	}
+
+	async checkSyncPhase(): Promise<boolean> {
+		console.log(await this.confluxClient.advanced)
+		return false
+		// 	const pid = this.getPid()
+		// 	if (!pid) {
+		// 		throw new Error('Node process not found')
+		// 	}
+
+		// 	for (let attempt = 1; attempt <= this.retryCount; attempt++) {
+		// 		try {
+		// 			return await this.confluxClient.cfx.debug.currentSyncPhase()
+		// 		} catch (error: unknown) {
+		// 			if (attempt < this.retryCount) {
+		// 				await delay(this.delayMs)
+		// 			} else {
+		// 				throw error
+		// 			}
+		// 		}
+		// 	}
+
+		// 	throw new Error('Failed to fetch status after multiple attempts.')
 	}
 }

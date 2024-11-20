@@ -211,7 +211,7 @@ export class DevkitCLI {
 			.command('configure')
 			.description('Configure the mnemonic phrase')
 			.action(async () => {
-				await this.wallet.configureMnemonic()
+				await this.wallet.createOrImportMnemonic()
 			})
 
 		walletCommand.command('mnemonic', walletMnemonic)

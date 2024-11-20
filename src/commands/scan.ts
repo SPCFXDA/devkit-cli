@@ -50,7 +50,7 @@ export class Scan extends ClientTask {
 	 * // Starts scanning and logging transactions from Conflux Core and eSpace.
 	 */
 	// deno-lint-ignore require-await
-	async execute(_options: { address?: string }): Promise<void> {
+	override async execute(_options: { address?: string }): Promise<void> {
 		this.coreScan()
 		this.espaceScan()
 	}

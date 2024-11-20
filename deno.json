@@ -1,9 +1,10 @@
 {
   "name": "@spcfxda/devkit",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "exports": {
     ".": "./mod.ts"
   },
+  "nodeModulesDir": "auto",
   "tasks": {
     "hooks:install": "deno run --allow-read=deno.json,.git/hooks/ --allow-write=.git/hooks/ jsr:@hongminhee/deno-task-hooks",
     "hooks:pre-commit": "deno check *.ts && deno lint && deno fmt --check && deno task test",

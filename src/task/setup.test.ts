@@ -59,7 +59,7 @@ Deno.test('SetupTask: constructor should initialize environment and secrets', ()
 Deno.test('SetupTask: setup method should handle errors gracefully', () => {
 	mockEnvSet()
 	class TestSetupTask extends SetupTask {
-		generateLogConfig() {
+		override generateLogConfig() {
 			throw new Error('Log config error')
 		}
 	}

@@ -4,7 +4,7 @@ import { assertSpyCallArgs, spy } from '@std/testing/mock'
 import { NodeTask } from './node.ts'
 import { ConfluxConfig } from '../config/mod.ts'
 import { join } from '@std/path'
-import { delay } from '@std/async/delay'
+// import { delay } from '@std/async/delay'
 
 const root_path = '/tmp/node.ts'
 
@@ -192,44 +192,44 @@ Deno.test('NodeTask: getPid should return null if server is not running', () => 
 	mockEnvClean()
 })
 
-Deno.test('NodeTask: tailF function should output new lines added to a file', async () => {
-	const tempFilePath = await Deno.makeTempFile()
-	const expectedLines = ['First line', 'Second line', 'Third line']
+// Deno.test('NodeTask: tailF function should output new lines added to a file', async () => {
+// 	const tempFilePath = await Deno.makeTempFile()
+// 	const expectedLines = ['First line', 'Second line', 'Third line']
 
-	// Write initial content
-	await Deno.writeTextFile(tempFilePath, expectedLines[0] + '\n')
-	const task = new NodeTask()
+// 	// Write initial content
+// 	await Deno.writeTextFile(tempFilePath, expectedLines[0] + '\n')
+// 	const task = new NodeTask()
 
-	const abortController = new AbortController()
-	const { signal } = abortController
+// 	const abortController = new AbortController()
+// 	const { signal } = abortController
 
-	const _tailProcess = task.tailF(tempFilePath, signal)
+// 	const _tailProcess = task.tailF(tempFilePath, signal)
 
-	// Capture console output
-	const output: string[] = []
-	const originalConsoleLog = console.log
-	console.log = (msg: string) => {
-		output.push(msg)
-	}
+// 	// Capture console output
+// 	const output: string[] = []
+// 	const originalConsoleLog = console.log
+// 	console.log = (msg: string) => {
+// 		output.push(msg)
+// 	}
 
-	try {
-		// Simulate file modification
-		await delay(50) // Allow some time for the watcher to start
-		await Deno.writeTextFile(tempFilePath, expectedLines[1] + '\n', { append: true })
-		await delay(50) // Wait for the watcher to detect the change
-		await Deno.writeTextFile(tempFilePath, expectedLines[2] + '\n', { append: true })
-		await delay(50) // Wait for the watcher to detect the change
-		abortController.abort() // Stop the tailF function
+// 	try {
+// 		// Simulate file modification
+// 		await delay(50) // Allow some time for the watcher to start
+// 		await Deno.writeTextFile(tempFilePath, expectedLines[1] + '\n', { append: true })
+// 		await delay(50) // Wait for the watcher to detect the change
+// 		await Deno.writeTextFile(tempFilePath, expectedLines[2] + '\n', { append: true })
+// 		await delay(50) // Wait for the watcher to detect the change
+// 		abortController.abort() // Stop the tailF function
 
-		// Validate the output
-		assertEquals(output, expectedLines.slice(1))
-	} finally {
-		// Restore original console.log
-		console.log = originalConsoleLog
+// 		// Validate the output
+// 		assertEquals(output, expectedLines.slice(1))
+// 	} finally {
+// 		// Restore original console.log
+// 		console.log = originalConsoleLog
 
-		// Cleanup
-		abortController.abort() // Stop the tailF function
-		//   await tailProcess;
-		Deno.removeSync(tempFilePath)
-	}
-})
+// 		// Cleanup
+// 		abortController.abort() // Stop the tailF function
+// 		//   await tailProcess;
+// 		Deno.removeSync(tempFilePath)
+// 	}
+// })

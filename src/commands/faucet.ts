@@ -20,7 +20,7 @@ export class Faucet extends ClientTask {
 	 * await faucet.execute({ value: '10', to: '0x123...' });
 	 * // Sends 10 CFX to the specified address.
 	 */
-	async execute(options: { value: string; to: string }): Promise<void> {
+	override async execute(options: { value: string; to: string }): Promise<void> {
 		const kia = new Kia('Starting transaction execution...')
 		kia.start()
 

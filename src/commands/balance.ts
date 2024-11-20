@@ -24,7 +24,7 @@ export class Balance extends ClientTask {
 	 * await balance.execute({});
 	 * // Retrieves and logs the balances for all genesis secrets.
 	 */
-	async execute(options: { address?: string }): Promise<void> {
+	override async execute(options: { address?: string }): Promise<void> {
 		const kia = new Kia('Retrieving balance')
 		kia.start()
 

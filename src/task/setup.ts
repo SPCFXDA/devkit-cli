@@ -59,10 +59,18 @@ export class SetupTask extends BaseTask {
 			this.generateSecrets()
 			this.writeConfig()
 		} catch (error) {
-			console.error(
-				'An error occurred during initialization:',
-				error.message,
-			)
+			if (error instanceof Error) {
+				console.error(
+					'An error occurred during initialization:',
+					error.message,
+				)
+			} else {
+				console.error(
+					'An error occurred during initialization:',
+					error,
+				)
+			}
+
 			// Deno.exit(1)
 		}
 	}

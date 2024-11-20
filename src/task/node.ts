@@ -127,7 +127,11 @@ export class NodeTask extends SetupTask {
 			}
 			return data
 		} catch (error) {
-			throw new Error(`Error reading stderr file: ${error.message}`)
+			if (error instanceof Error) {
+				throw new Error(`Error reading stderr file: ${error.message}`)
+			} else {
+				throw new Error(`Error reading stderr file: ${error}`)
+			}
 		}
 	}
 
