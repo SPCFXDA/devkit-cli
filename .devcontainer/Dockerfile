@@ -71,7 +71,7 @@ ENV LANG=C.UTF-8 \
 FROM devkit-vscode AS devkit-deno
 # Deno install
 USER root
-COPY --from=denoland/deno:bin-1.46.1 /deno /usr/local/bin/deno
+COPY --from=denoland/deno:bin-2.1.0 /deno /usr/local/bin/deno
 USER $USERNAME 
 
 
