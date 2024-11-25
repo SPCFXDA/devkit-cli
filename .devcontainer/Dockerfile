@@ -1,5 +1,5 @@
 # Define build arguments for Node.js and Conflux release versions
-ARG NODE_RELEASE=2.4.1
+ARG NODE_RELEASE=2.4.0
 ARG BASE_IMAGE=ubuntu:latest
 
 # Stage 1: Use the official Conflux Rust image as the base for building release artifacts
