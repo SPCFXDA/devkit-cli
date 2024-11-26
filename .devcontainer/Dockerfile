@@ -95,7 +95,7 @@ COPY .. .
 RUN deno task release
 RUN cp release/usr/local/bin/devkit /bin/devkit
 
-FROM ${BASE_IMAGE} AS devkit-release
+FROM ubuntu:latest AS devkit-release
 USER root
 COPY --from=devkit-build /bin/devkit /bin/devkit
 COPY --from=builder /bin/conflux /bin/conflux
