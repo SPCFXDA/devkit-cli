@@ -1,9 +1,26 @@
-# Define build arguments for Node.js and Conflux release versions
-ARG NODE_RELEASE=2.4.0
-ARG BASE_IMAGE=ubuntu:latest
+FROM rust:1.77.2-slim AS builder
+ARG VERSION=v2.4.1
 
-# Stage 1: Use the official Conflux Rust image as the base for building release artifacts
-FROM confluxchain/conflux-rust:${NODE_RELEASE} AS release
+RUN apt-get update && apt-get install -y \
+    git \
+    clang \
+    libsqlite3-dev \
+    pkg-config \
+    libssl-dev \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /work
+
+RUN git clone -b ${VERSION} --single-branch --depth 1 https://github.com/Conflux-Chain/conflux-rust.git conflux 
+
+WORKDIR /work/conflux
+
+RUN export CC=clang && export CXX=clang++ && cargo build --release
+
+
+# Define build arguments for Node.js and Conflux release versions
+ARG BASE_IMAGE=ubuntu:latest
 
 # Stage 2: Use the official Node.js slim image as the base for the development kit
 FROM ${BASE_IMAGE} AS conflux
@@ -21,11 +38,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Conflux binaries from the release stage to the current stage
-COPY --from=release /bin/conflux /bin/conflux
-COPY --from=release /bin/cfxkey /bin/cfxkey
-COPY --from=release /bin/pos-genesis-tool /bin/pos-genesis-tool
-COPY --from=release /bin/cfx-gen-dot /bin/cfx-gen-dot
-COPY --from=release /bin/cfxstore /bin/cfxstore
+COPY --from=builder /bin/conflux /bin/conflux
+COPY --from=builder /bin/cfxkey /bin/cfxkey
+COPY --from=builder /bin/pos-genesis-tool /bin/pos-genesis-tool
+COPY --from=builder /bin/cfx-gen-dot /bin/cfx-gen-dot
+COPY --from=builder /bin/cfxstore /bin/cfxstore
 # Create necessary directories for Conflux node operation
 RUN mkdir -p ${CONFLUX_NODE_ROOT} /workspaces
 
@@ -84,8 +101,8 @@ RUN cp release/usr/local/bin/devkit /bin/devkit
 FROM ${BASE_IMAGE} AS devkit-release
 USER root
 COPY --from=devkit-build /bin/devkit /bin/devkit
-COPY --from=release /bin/conflux /bin/conflux
-COPY --from=release /bin/cfxkey /bin/cfxkey
-COPY --from=release /bin/pos-genesis-tool /bin/pos-genesis-tool
-COPY --from=release /bin/cfx-gen-dot /bin/cfx-gen-dot
-COPY --from=release /bin/cfxstore /bin/cfxstore
+COPY --from=builder /bin/conflux /bin/conflux
+COPY --from=builder /bin/cfxkey /bin/cfxkey
+COPY --from=builder /bin/pos-genesis-tool /bin/pos-genesis-tool
+COPY --from=builder /bin/cfx-gen-dot /bin/cfx-gen-dot
+COPY --from=builder /bin/cfxstore /bin/cfxstore
