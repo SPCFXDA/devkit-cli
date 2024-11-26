@@ -19,11 +19,8 @@ WORKDIR /work/conflux
 RUN export CC=clang && export CXX=clang++ && cargo build --release
 
 
-# Define build arguments for Node.js and Conflux release versions
-ARG BASE_IMAGE=ubuntu:latest
-
 # Stage 2: Use the official Node.js slim image as the base for the development kit
-FROM ${BASE_IMAGE} AS conflux
+FROM ubuntu:latest AS conflux
 
 # Define build arguments for Conflux node configuration
 ARG CONFLUX_NODE_ROOT="/opt/conflux"
