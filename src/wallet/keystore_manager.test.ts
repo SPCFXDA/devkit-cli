@@ -76,7 +76,9 @@ Deno.test('KeystoreManager - handle non-existent keystore file', async () => {
 		// Ensure the test keystore file does not exist
 		try {
 			await Deno.remove(tempKeystorePath)
-		} catch { continue }
+		} catch {
+			// empty
+		}
 
 		// Initialize KeystoreManager
 		const manager = new KeystoreManager()
