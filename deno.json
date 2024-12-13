@@ -36,7 +36,9 @@
     "cliffy/command": "https://deno.land/x/cliffy@v1.0.0-rc.4/command/mod.ts",
     "cliffy/prompt": "https://deno.land/x/cliffy@v1.0.0-rc.4/prompt/mod.ts",
     "cliffy/color": "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/colors.ts",
+    "cliffy/ansi": "https://deno.land/x/cliffy@v1.0.0-rc.4/ansi/mod.ts",
     "cliffy/keycode": "https://deno.land/x/cliffy@v1.0.0-rc.4/keycode/mod.ts",
+    "cliffy/testing": "https://deno.land/x/cliffy@v1.0.0-rc.4/testing/mod.ts",
     "viem": "https://esm.sh/viem@2.18.8",
     "viem/accounts": "https://esm.sh/viem@2.18.8/accounts"
   },
