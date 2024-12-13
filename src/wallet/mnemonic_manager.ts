@@ -1,8 +1,8 @@
 import { Input, Select } from 'cliffy/prompt'
 import { english, generateMnemonic } from 'cive/accounts'
 // import { KeystoreEntry } from '../types.ts'
-import { KeystoreManager } from './KeystoreManager.ts'
-import { EncryptionService } from './EncryptionService.ts'
+import { KeystoreManager } from './keystore_manager.ts'
+import { EncryptionService } from './encryption_service.ts'
 
 export class MnemonicManager {
 	private keystoreManager: KeystoreManager

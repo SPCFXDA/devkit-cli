@@ -1,9 +1,9 @@
 import { HDWallet } from '@conflux-dev/hdwallet'
-import { KeystoreManager } from './KeystoreManager.ts'
-import { MnemonicManager } from './MnemonicManager.ts'
+import { KeystoreManager } from './keystore_manager.ts'
+import { MnemonicManager } from './mnemonic_manager.ts'
 import { Select } from 'cliffy/prompt'
 import { generatePrivateKey } from 'cive/accounts'
-import { EncryptionService } from './EncryptionService.ts'
+import { EncryptionService } from './encryption_service.ts'
 
 export class Wallet {
 	private keystoreManager: KeystoreManager
@@ -42,6 +42,10 @@ export class Wallet {
 		return mnemonicObj.type === 'encoded'
 			? await this.mnemonicManager.encryptionService.decryptMnemonic(mnemonicObj.mnemonic)
 			: mnemonicObj.mnemonic
+	}
+
+	async addMnemonic(): Promise<void> {
+		await this.mnemonicManager.addMnemonic()
 	}
 
 	async selectActiveMnemonic(): Promise<void> {

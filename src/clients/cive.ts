@@ -1,4 +1,13 @@
-import { Address, Chain, createWalletClient, http, parseCFX, publicActions, WalletClient } from 'cive'
+import {
+	Address,
+	Chain,
+	createPublicClient,
+	createWalletClient,
+	http,
+	parseCFX,
+	PublicClient,
+	WalletClient,
+} from 'cive'
 import { defineChain, encodeFunctionData, hexAddressToBase32, isAddress as isCoreAddress } from 'cive/utils'
 import { Account, privateKeyToAccount } from 'cive/accounts'
 import { Config } from '@xcfx/node'
@@ -6,6 +15,7 @@ import { isAddress as isEspaceAddress } from 'viem'
 import { Block, Transaction } from '../types.ts'
 export class coreClient {
 	private account: Account
+	private public: PublicClient
 	private wallet: WalletClient
 	private cfg: Config
 	private chain: Chain
@@ -36,16 +46,21 @@ export class coreClient {
 			{ networkId: this.cfg.chainId! },
 		)
 		this.address = this.account.address
+		this.public = createPublicClient({
+			pollingInterval: this.cfg.devBlockIntervalMs,
+			transport: http(`http://127.0.0.1:${this.cfg.jsonrpcHttpPort}`),
+			chain: this.chain,
+		})
 		this.wallet = createWalletClient({
 			account: this.account,
 			pollingInterval: this.cfg.devBlockIntervalMs,
 			transport: http(`http://127.0.0.1:${this.cfg.jsonrpcHttpPort}`),
 			chain: this.chain,
-		}).extend(publicActions)
+		})
 	}
 
-	async getBalance(address: Address): Promise<string> {
-		return await this.wallet.getBalance({ address })
+	async getBalance(address: Address): Promise<bigint> {
+		return await this.public.getBalance({ address })
 	}
 
 	async sendTransaction(address: Address, amount: string): Promise<string> {
@@ -68,7 +83,7 @@ export class coreClient {
 				}),
 				value: parseCFX(amount),
 				data: encodeFunctionData({
-					abi: (await import('./crossSpaceCall.json', {
+					abi: (await import('./csc.abi.json', {
 						with: { type: 'json' },
 					})).default,
 					functionName: 'transferEVM',
@@ -86,18 +101,18 @@ export class coreClient {
 		onNewBlock = (block: Block) => console.log('Block Number:', block.blockNumber),
 		onNewTransaction = (transactionDetails: Transaction) => console.log('Transaction Details:', transactionDetails),
 	): () => void {
-		return this.wallet.watchEpochNumber({
+		return this.public.watchEpochNumber({
 			emitMissed: false,
 			epochTag: 'latest_mined',
 			onEpochNumber: async (epochNumber: bigint) => {
-				const blockHashes = await this.wallet.getBlocksByEpoch({ epochNumber })
+				const blockHashes = await this.public.getBlocksByEpoch({ epochNumber })
 				for (const hash of blockHashes) {
-					const block = await this.wallet.getBlock({ blockHash: hash as `0x${string}` })
+					const block = await this.public.getBlock({ blockHash: hash as `0x${string}` })
 					onNewBlock(block)
 
 					await Promise.all(
 						block.transactions.map(async (txHash: `0x${string}`) => {
-							const tx = await this.wallet.getTransaction({ hash: txHash })
+							const tx = await this.public.getTransaction({ hash: txHash })
 							onNewTransaction(tx as Transaction)
 						}),
 					)

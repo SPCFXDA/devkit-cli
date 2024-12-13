@@ -1,6 +1,6 @@
 import { privateKeyToAccount } from 'cive/accounts'
 import { CliSpinner } from './spinner.ts'
-import { Wallet } from './wallet.ts'
+import { Wallet } from './wallet/wallet.ts'
 import { Config, createServer } from '@xcfx/node'
 import { coreClient } from './clients/cive.ts'
 
