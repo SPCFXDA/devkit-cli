@@ -1,6 +1,6 @@
 import { Command } from 'cliffy/command'
 import { CliSpinner } from './spinner.ts'
-import { Wallet } from './wallet.ts'
+import { Wallet } from './wallet/wallet.ts'
 import { KeyCode, parse } from 'cliffy/keycode'
 import { ServerManager } from './server.ts'
 import { Config } from '@xcfx/node'

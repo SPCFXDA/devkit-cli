@@ -5,18 +5,7 @@ import { crypto } from '@std/crypto'
 import { ensureFileSync } from '@std/fs'
 import { join } from '@std/path'
 import { HDWallet } from '@conflux-dev/hdwallet'
-
-// --- Types ---
-type KeystoreEntry = {
-	type: 'plaintext' | 'encoded'
-	label: string
-	mnemonic: string
-}
-
-type KeystoreFile = {
-	keystore: KeystoreEntry[]
-	activeIndex: number | null
-}
+import { KeystoreEntry, KeystoreFile } from './types.ts'
 
 export class Wallet {
 	// Properties

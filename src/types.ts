@@ -18,3 +18,15 @@ export interface Transaction {
 	gas: bigint
 	gasPrice?: bigint | undefined
 }
+
+// --- Types ---
+export type KeystoreEntry = {
+	type: 'plaintext' | 'encoded'
+	label: string
+	mnemonic: string
+}
+
+export type KeystoreFile = {
+	keystore: KeystoreEntry[]
+	activeIndex: number | null
+}
