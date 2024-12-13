@@ -1,4 +1,4 @@
-import { Spinner } from '@std/cli/spinner'
+import { Spinner } from '@std/cli/unstable-spinner'
 import { colors } from 'cliffy/color'
 
 export class CliSpinner {

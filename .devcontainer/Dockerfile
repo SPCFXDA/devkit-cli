@@ -35,11 +35,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Conflux binaries from the release stage to the current stage
-COPY --from=builder /bin/conflux /bin/conflux
-COPY --from=builder /bin/cfxkey /bin/cfxkey
-COPY --from=builder /bin/pos-genesis-tool /bin/pos-genesis-tool
-COPY --from=builder /bin/cfx-gen-dot /bin/cfx-gen-dot
-COPY --from=builder /bin/cfxstore /bin/cfxstore
+COPY --from=builder /work/conflux/target/release/conflux /bin/conflux
+COPY --from=builder /work/conflux/target/release/cfxkey /bin/cfxkey
+COPY --from=builder /work/conflux/target/release/pos-genesis-tool /bin/pos-genesis-tool
+COPY --from=builder /work/conflux/target/release/cfx-gen-dot /bin/cfx-gen-dot
+COPY --from=builder /work/conflux/target/release/cfxstore /bin/cfxstore
 # Create necessary directories for Conflux node operation
 RUN mkdir -p ${CONFLUX_NODE_ROOT} /workspaces
 
