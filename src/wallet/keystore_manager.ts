@@ -2,10 +2,19 @@ import { ensureFileSync } from '@std/fs'
 import { join } from '@std/path'
 import { KeystoreEntry, KeystoreFile } from '../types.ts'
 
-export class KeystoreManager {
-	private keystorePath: string
-	private keystore: KeystoreEntry[] = []
-	private activeIndex: number | null = 0
+export interface IKeystoreManager {
+	readKeystore(): Promise<KeystoreFile | null>
+	writeKeystore(): Promise<void>
+	getKeystore(): KeystoreEntry[]
+	setKeystore(keystore: KeystoreEntry[]): void
+	getActiveIndex(): number
+	setActiveIndex(index: number | null): void
+}
+
+export class KeystoreManager implements IKeystoreManager {
+	public keystorePath: string
+	public keystore: KeystoreEntry[] = []
+	public activeIndex: number | null = 0
 
 	constructor() {
 		this.keystorePath = join(Deno.env.get('HOME') || '', '.devkit.keystore.json')

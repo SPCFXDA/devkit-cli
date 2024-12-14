@@ -1,7 +1,8 @@
 import { Input, Select } from 'cliffy/prompt'
-import { english, generateMnemonic } from 'cive/accounts'
+import { english } from 'viem/accounts'
 import { KeystoreManager } from './keystore_manager.ts'
 import { EncryptionService } from './encryption_service.ts'
+import { HDWallet } from '@conflux-dev/hdwallet'
 
 export class MnemonicManager {
 	private keystoreManager: KeystoreManager
@@ -48,7 +49,11 @@ export class MnemonicManager {
 				{ name: 'Insert an existing mnemonic', value: 'i' },
 			],
 		})
-		return userChoice === 'i' ? await this.importMnemonic() : generateMnemonic(english)
+		return userChoice === 'i' ? await this.importMnemonic() : this.generateMnemonic()
+	}
+
+	generateMnemonic(): string {
+		return HDWallet.generateMnemonic()
 	}
 
 	private async importMnemonic(): Promise<string> {

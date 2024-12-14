@@ -5,11 +5,11 @@ import { ensureFileSync } from '@std/fs'
 import { KeystoreEntry } from '../types.ts'
 
 Deno.test('KeystoreManager - initialize and read keystore', async () => {
-	const tempKeystorePath = join(Deno.cwd(), '.devkit.keystore.json')
-
+	const tmpdir = await Deno.makeTempDir()
+	const tempKeystorePath = join(tmpdir, '.devkit.keystore.json')
 	// Mock Deno.env to set HOME to current directory
 	const originalEnv = Deno.env.get
-	Deno.env.get = (key: string) => (key === 'HOME' ? Deno.cwd() : originalEnv(key))
+	Deno.env.get = (key: string) => (key === 'HOME' ? tmpdir : originalEnv(key))
 
 	try {
 		// Ensure the test keystore file exists

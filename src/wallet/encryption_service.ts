@@ -34,7 +34,6 @@ export class EncryptionService {
 	async encryptMnemonic(mnemonic: string): Promise<string> {
 		const iv = this.getRandomValues(new Uint8Array(12))
 		const salt = this.getRandomValues(new Uint8Array(16))
-		console.log(iv, salt)
 		const key = await this.deriveKeyFromPassword('Enter encryption password to secure your mnemonic.', salt)
 		const encrypted = await crypto.subtle.encrypt(
 			{ name: 'AES-GCM', iv },

@@ -2,7 +2,7 @@ import { HDWallet } from '@conflux-dev/hdwallet'
 import { KeystoreManager } from './keystore_manager.ts'
 import { MnemonicManager } from './mnemonic_manager.ts'
 import { Select } from 'cliffy/prompt'
-import { generatePrivateKey } from 'cive/accounts'
+import { generatePrivateKey } from 'viem/accounts'
 import { EncryptionService } from './encryption_service.ts'
 
 export class Wallet {
