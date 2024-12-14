@@ -2,7 +2,7 @@ import { snapshotTest } from 'cliffy/testing'
 import { ansi } from 'cliffy/ansi'
 import { EncryptionService } from './encryption_service.ts'
 
-// import { assertEquals, assertRejects } from "@std/assert";
+import { assertEquals } from '@std/assert'
 
 const mockGetRandomValues = (typedArray: Uint8Array) => {
 	return typedArray
@@ -21,7 +21,10 @@ await snapshotTest({
 		encryptionService.getRandomValues = mockGetRandomValues
 		const encryptedMnemonic = await encryptionService.encryptMnemonic(mnemonic)
 
-		console.log('encrypted:', encryptedMnemonic)
-		console.log('decrypted', await encryptionService.decryptMnemonic(encryptedMnemonic))
+		assertEquals(
+			encryptedMnemonic,
+			'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANtJQA7N38hVEuTdGw+i+TKMDYWq4lJ7+eVgQKvL3RPe8wniDZH8IBhbyX/BlfgviIBIOHEAswZdqpCJUruE5Nda3rF8xMumtK6jjg==',
+		)
+		assertEquals(mnemonic, await encryptionService.decryptMnemonic(encryptedMnemonic))
 	},
 })

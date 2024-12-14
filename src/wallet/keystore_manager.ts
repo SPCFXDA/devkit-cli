@@ -35,6 +35,10 @@ export class KeystoreManager {
 		this.keystore = keystore
 	}
 
+	setKeystorePath(keystore_path: string) {
+		this.keystorePath = keystore_path
+	}
+
 	setActiveIndex(index: number | null) {
 		this.activeIndex = index
 	}

@@ -11,13 +11,11 @@
     "bump": "deno fmt && deno run -A jsr:@mys/bump@1",
     "test": "deno test --allow-env --allow-read --allow-write --allow-run  --coverage --clean && deno coverage --html",
     "doc": "deno doc --html --name='DevKit CLI' --output=./documentation/ ./mod.ts",
-    "cli": "deno run --allow-env --allow-read --allow-sys --allow-ffi --allow-write --allow-run --allow-net --unstable-kv cli.ts",
-    "release": "deno compile --allow-env --allow-read --allow-sys --allow-ffi --allow-write --allow-run --allow-net --unstable-kv --target x86_64-unknown-linux-gnu  --output ./release/usr/local/bin/devkit src/xcfx/cli.ts"
+    "cli": "deno run --allow-env --allow-read --allow-sys --allow-ffi --allow-write --allow-run --allow-net --unstable-kv src/cli.ts",
+    "release": "deno compile --allow-env --allow-read --allow-sys --allow-ffi --allow-write --allow-run --allow-net --unstable-kv --target x86_64-unknown-linux-gnu  --output ./release/usr/local/bin/devkit src/cli.ts"
   },
   "imports": {
     "@conflux-dev/hdwallet": "npm:@conflux-dev/hdwallet@^0.1.2",
-    "@scure/bip32": "npm:@scure/bip32@^1.6.0",
-    "@scure/bip39": "npm:@scure/bip39@^1.5.0",
     "@std/assert": "jsr:@std/assert@^1.0.9",
     "@std/async": "jsr:@std/async@^1.0.3",
     "@std/cli": "jsr:@std/cli@^1.0.8",

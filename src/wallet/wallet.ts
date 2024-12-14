@@ -38,10 +38,16 @@ export class Wallet {
 		if (this.keystoreManager.getActiveIndex() === null || this.keystoreManager.getActiveIndex() < 0) {
 			throw new Error('No active mnemonic selected.')
 		}
-		const mnemonicObj = this.keystoreManager.getKeystore()[this.keystoreManager.getActiveIndex()]
-		return mnemonicObj.type === 'encoded'
-			? await this.mnemonicManager.encryptionService.decryptMnemonic(mnemonicObj.mnemonic)
-			: mnemonicObj.mnemonic
+		let mnemonic: string = ''
+		if (!this.hdWallet) {
+			const mnemonicObj = this.keystoreManager.getKeystore()[this.keystoreManager.getActiveIndex()]
+			mnemonic = mnemonicObj.type === 'encoded'
+				? await this.mnemonicManager.encryptionService.decryptMnemonic(mnemonicObj.mnemonic)
+				: mnemonicObj.mnemonic
+		} else {
+			mnemonic = this.hdWallet.mnemonic
+		}
+		return mnemonic
 	}
 
 	async addMnemonic(): Promise<void> {

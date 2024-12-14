@@ -66,28 +66,10 @@ Deno.test('KeystoreManager - set and get keystore and active index', () => {
 })
 
 Deno.test('KeystoreManager - handle non-existent keystore file', async () => {
-	const tempKeystorePath = join(Deno.cwd(), '.non_existent_keystore.json')
-
-	// Mock Deno.env to set HOME to current directory
-	const originalEnv = Deno.env.get
-	Deno.env.get = (key: string) => (key === 'HOME' ? Deno.cwd() : originalEnv(key))
-
-	try {
-		// Ensure the test keystore file does not exist
-		try {
-			await Deno.remove(tempKeystorePath)
-		} catch {
-			// empty
-		}
-
-		// Initialize KeystoreManager
-		const manager = new KeystoreManager()
-
-		// Read non-existent keystore
-		const keystore = await manager.readKeystore()
-		assertEquals(keystore, null)
-	} finally {
-		// Restore environment
-		Deno.env.get = originalEnv
-	}
+	// Initialize KeystoreManager
+	const manager = new KeystoreManager()
+	manager.setKeystorePath('.wrong.path')
+	// Read non-existent keystore
+	const keystore = await manager.readKeystore()
+	assertEquals(keystore, null)
 })
