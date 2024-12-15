@@ -30,8 +30,8 @@ export class Wallet {
 		} else {
 			this.keystoreManager.setKeystore(existingKeystore.keystore)
 			this.keystoreManager.setActiveIndex(existingKeystore.activeIndex)
-			this.hdWallet = new HDWallet(await this.getActiveMnemonic())
 		}
+		this.hdWallet = new HDWallet(await this.getActiveMnemonic())
 	}
 
 	async getActiveMnemonic(): Promise<string> {
