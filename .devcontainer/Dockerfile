@@ -1,22 +1,22 @@
-FROM rust:1.77.2-slim AS builder
-ARG VERSION=v2.4.1
+# FROM rust:1.77.2-slim AS builder
+# ARG VERSION=v2.4.1
 
-RUN apt-get update && apt-get install -y \
-    git \
-    clang \
-    libsqlite3-dev \
-    pkg-config \
-    libssl-dev \
-    cmake \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#     git \
+#     clang \
+#     libsqlite3-dev \
+#     pkg-config \
+#     libssl-dev \
+#     cmake \
+#     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /work
+# WORKDIR /work
 
-RUN git clone -b ${VERSION} --single-branch --depth 1 https://github.com/Conflux-Chain/conflux-rust.git conflux 
+# RUN git clone -b ${VERSION} --single-branch --depth 1 https://github.com/Conflux-Chain/conflux-rust.git conflux 
 
-WORKDIR /work/conflux
+# WORKDIR /work/conflux
 
-RUN export CC=clang && export CXX=clang++ && cargo build --release
+# RUN export CC=clang && export CXX=clang++ && cargo build --release
 
 
 # Stage 2: Use the official Node.js slim image as the base for the development kit
@@ -35,11 +35,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Conflux binaries from the release stage to the current stage
-COPY --from=builder /work/conflux/target/release/conflux /bin/conflux
-COPY --from=builder /work/conflux/target/release/cfxkey /bin/cfxkey
-COPY --from=builder /work/conflux/target/release/pos-genesis-tool /bin/pos-genesis-tool
-COPY --from=builder /work/conflux/target/release/cfx-gen-dot /bin/cfx-gen-dot
-COPY --from=builder /work/conflux/target/release/cfxstore /bin/cfxstore
+# COPY --from=builder /work/conflux/target/release/conflux /bin/conflux
+# COPY --from=builder /work/conflux/target/release/cfxkey /bin/cfxkey
+# COPY --from=builder /work/conflux/target/release/pos-genesis-tool /bin/pos-genesis-tool
+# COPY --from=builder /work/conflux/target/release/cfx-gen-dot /bin/cfx-gen-dot
+# COPY --from=builder /work/conflux/target/release/cfxstore /bin/cfxstore
 # Create necessary directories for Conflux node operation
 RUN mkdir -p ${CONFLUX_NODE_ROOT} /workspaces
 
@@ -89,17 +89,17 @@ COPY --from=denoland/deno:bin-2.1.0 /deno /usr/local/bin/deno
 USER $USERNAME 
 
 
-FROM devkit-deno AS devkit-build
-USER root
-COPY .. .
-RUN deno task release
-RUN cp release/usr/local/bin/devkit /bin/devkit
+# FROM devkit-deno AS devkit-build
+# USER root
+# COPY .. .
+# RUN deno task release
+# RUN cp release/usr/local/bin/devkit /bin/devkit
 
-FROM ubuntu:latest AS devkit-release
-USER root
-COPY --from=devkit-build /bin/devkit /bin/devkit
-COPY --from=builder /bin/conflux /bin/conflux
-COPY --from=builder /bin/cfxkey /bin/cfxkey
-COPY --from=builder /bin/pos-genesis-tool /bin/pos-genesis-tool
-COPY --from=builder /bin/cfx-gen-dot /bin/cfx-gen-dot
-COPY --from=builder /bin/cfxstore /bin/cfxstore
+# FROM ubuntu:latest AS devkit-release
+# USER root
+# COPY --from=devkit-build /bin/devkit /bin/devkit
+# COPY --from=builder /bin/conflux /bin/conflux
+# COPY --from=builder /bin/cfxkey /bin/cfxkey
+# COPY --from=builder /bin/pos-genesis-tool /bin/pos-genesis-tool
+# COPY --from=builder /bin/cfx-gen-dot /bin/cfx-gen-dot
+# COPY --from=builder /bin/cfxstore /bin/cfxstore
