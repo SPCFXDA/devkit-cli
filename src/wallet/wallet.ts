@@ -55,6 +55,7 @@ export class Wallet {
 	}
 
 	async selectActiveMnemonic(): Promise<void> {
+		const currentIndex = this.keystoreManager.getActiveIndex()
 		const selectedIndex = await Select.prompt({
 			message: 'Select the active mnemonic:',
 			options: this.keystoreManager.getKeystore().map((mnemonicObj, index) => ({
@@ -65,10 +66,12 @@ export class Wallet {
 
 		this.keystoreManager.setActiveIndex(Number(selectedIndex))
 		await this.keystoreManager.writeKeystore()
+		if (Number(selectedIndex.value) !== currentIndex) {
+			this.hdWallet = new HDWallet(await this.getActiveMnemonic())
+		}
 		console.log(
-			`Active wallet set to: ${this.keystoreManager.getKeystore()[this.keystoreManager.getActiveIndex()]?.label}`,
+			`Active wallet set to: ${this.getActiveMnemonicLabel()}`,
 		)
-		this.hdWallet = new HDWallet(await this.getActiveMnemonic())
 	}
 
 	generatePrivateKey(): `0x${string}` {

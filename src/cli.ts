@@ -123,7 +123,7 @@ export class DevkitCLI {
 			.description('Select the currently active mnemonic')
 			.action(async () => {
 				await this.wallet.initializeKeystore()
-				this.wallet.selectActiveMnemonic()
+				await this.wallet.selectActiveMnemonic()
 			})
 
 		walletCommand
@@ -145,11 +145,11 @@ export class DevkitCLI {
 				await this.wallet.initializeKeystore()
 
 				if (core) {
-					console.log(this.wallet.corePrivateKey(index as number))
+					console.log(await this.wallet.corePrivateKey(index as number))
 				} else if (espace) {
-					console.log(this.wallet.espacePrivateKey(index as number))
+					console.log(await this.wallet.espacePrivateKey(index as number))
 				} else if (derivationPath) {
-					console.log(this.wallet.privateKeyByDerivationPath(derivationPath as string))
+					console.log(await this.wallet.privateKeyByDerivationPath(derivationPath as string))
 				} else {
 					console.log('Invalid options.')
 				}
